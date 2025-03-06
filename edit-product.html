@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product</title>
+</head>
+<body>
+
+    <h1>Edit Product</h1>
+    <form id="edit-product-form">
+        <input type="hidden" id="productId" name="ProductID">
+
+        <label>Product Name:</label>
+        <input type="text" id="productName" name="ProductName" required>
+
+        <label>Price:</label>
+        <input type="number" id="price" name="Price" required>
+
+        <label>Description:</label>
+        <textarea id="description" name="Description" required></textarea>
+
+        <button type="submit">Update Product</button>
+    </form>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('productId');
+
+        fetch(`https://qvdzic66m0.execute-api.us-east-1.amazonaws.com/prod/product?ProductID=${productId}`)
+        .then(response => response.json())
+        .then(product => {
+            document.getElementById('productId').value = product.ProductID;
+            document.getElementById('productName').value = product.ProductName;
+            document.getElementById('price').value = product.Price;
+            document.getElementById('description').value = product.Description;
+        });
+
+        document.getElementById('edit-product-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            fetch(`https://qvdzic66m0.execute-api.us-east-1.amazonaws.com/prod/product?ProductID=${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(new FormData(event.target).entries()))
+            }).then(() => window.location.href = 'index.html');
+        });
+    </script>
+</body>
+</html>
