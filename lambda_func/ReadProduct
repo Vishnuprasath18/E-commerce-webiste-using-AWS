@@ -1,0 +1,47 @@
+import json
+import boto3
+from decimal import Decimal
+
+# Helper function to convert Decimal objects to float
+def convert_decimals(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)  # Convert Decimal to float
+    elif isinstance(obj, dict):
+        return {k: convert_decimals(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_decimals(v) for v in obj]
+    return obj
+
+# Initialize DynamoDB resource
+dynamodb = boto3.resource('dynamodb')
+
+# Reference the DynamoDB table
+table = dynamodb.Table('products')
+
+def lambda_handler(event, context):
+    try:
+        # Scan the DynamoDB table to get all items
+        response = table.scan()
+
+        # Check if any items were found
+        if 'Items' not in response or len(response['Items']) == 0:
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'message': 'No products found'})
+            }
+
+        # Convert Decimal objects to float
+        items = convert_decimals(response['Items'])
+
+        # Return the list of products
+        return {
+            'statusCode': 200,
+            'body': json.dumps(items)
+        }
+    except Exception as e:
+        # Log the error and return a 500 response
+        print(f'Error: {str(e)}')
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': 'Internal server error'})
+        }
